@@ -98,6 +98,11 @@ jobs:
           else
             gh release edit "$TAG" --draft=false --prerelease --latest=false
           fi
+      - name: Promote an existing verified prerelease when stable catches up
+        if: success() && env.TARGET == 'stable'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: gh release edit "$TAG" --draft=false --prerelease=false --latest
       - name: Summary
         if: always()
         env:
