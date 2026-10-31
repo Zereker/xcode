@@ -89,7 +89,7 @@ def build(version, output):
         verify_checksum(binary, expected)
         binary.chmod(0o755)
         run(["codesign", "--verify", "--strict", str(binary)])
-        raw = run(["codesign", "-d", "--entitlements", "-", str(binary)]).stdout
+        raw = run(["codesign", "-d", "--entitlements", "-", "--xml", str(binary)]).stdout
         entitlements = plistlib.loads(raw) if raw.strip() else {}
         entitlements["com.apple.security.cs.allow-jit"] = True
         entitlements_file = work / "entitlements.plist"
@@ -101,7 +101,7 @@ def build(version, output):
         details = run(["codesign", "-dv", "--verbose=4", str(binary)], text=True).stderr
         if f"Identifier={IDENTIFIER}" not in details.splitlines():
             raise ValueError("Incorrect signing identifier")
-        signed = plistlib.loads(run(["codesign", "-d", "--entitlements", "-", str(binary)]).stdout)
+        signed = plistlib.loads(run(["codesign", "-d", "--entitlements", "-", "--xml", str(binary)]).stdout)
         if signed.get("com.apple.security.cs.allow-jit") is not True:
             raise ValueError("JIT entitlement missing after signing")
         smoke(binary, version, work)
