@@ -1,3 +1,65 @@
+# xcode packaging
+
+This fork packages official Claude Code releases as a macOS ARM64 executable named
+`xcode`, signed locally with `com.zereker.xcode`. It does not compile the CLI from
+source. Upstream documentation and example files below remain unchanged.
+
+## Automated releases
+
+[Package xcode](https://github.com/Zereker/xcode/actions/workflows/package-xcode.yml)
+checks the official **stable** release daily at 02:23 UTC (10:23 Beijing time).
+It also runs when packaging code changes. Use **Run workflow** for `latest` or
+a specific numeric version; these manual non-stable builds are prereleases.
+Complete existing releases are skipped. A force run verifies again but never
+overwrites a published binary. Increase the packaging revision and tag suffix
+together when deliberately publishing a new package for the same upstream version.
+
+The macOS ARM64 job verifies Anthropic's manifest signature against the pinned
+release key fingerprint, checks the binary checksum and original code signature,
+preserves entitlements, adds `com.apple.security.cs.allow-jit`, re-signs, and checks
+the resulting signature, version and `--help`. Tests use a temporary home without
+API credentials. Merely passing `--version` is insufficient to detect the previous
+`SharedArrayBuffer is not defined` failure. No model requests are made.
+
+Binary archives, checksums, signed upstream manifests and provenance metadata live
+in [GitHub Releases](https://github.com/Zereker/xcode/releases), not in Git history.
+Failed builds never publish a release. Releases are ad-hoc signed, not notarized.
+The build requires no Anthropic API key, Apple certificate or cross-repository PAT.
+The repository's GitHub Actions must be enabled; schedules on inactive public
+repositories may be disabled by GitHub.
+
+## Homebrew
+
+The separate [tap](https://github.com/Zereker/homebrew-tap) polls stable releases
+hourly and verifies metadata and the downloaded archive before updating its formula:
+
+```sh
+brew install Zereker/tap/xcode
+brew upgrade xcode
+```
+
+An existing `~/.local/bin/xcode` can take precedence over Homebrew in PATH.
+Check `which -a xcode` before switching. The workflows never change your local
+installation or `~/.claude` settings. Keep your custom installation's automatic
+updater disabled.
+
+## Manual packaging
+
+On macOS ARM64 with Python 3.12+, curl, GnuPG and codesign:
+
+```sh
+python3 -m unittest discover -s packaging -p 'test_*.py' -v
+python3 packaging/package.py build --target stable
+```
+
+Output: `dist/xcode-darwin-arm64.tar.gz`, `metadata.json`, `SHA256SUMS` and the
+upstream signed manifest. This command does not install or replace any program.
+
+Source and integrity procedure:
+https://code.claude.com/docs/en/setup#binary-integrity-and-code-signing
+
+---
+
 # Claude Code
 
 ![](https://img.shields.io/badge/Node.js-18%2B-brightgreen?style=flat-square) [![npm]](https://www.npmjs.com/package/@anthropic-ai/claude-code)

@@ -27,8 +27,12 @@ MODEL_VERSION = re.compile(
 )
 
 # Key: "<workflow file name>:<job id>". Value: why that job is exempt from the table's rule.
-EXEMPT_FROM_FIREWALL_RUNNER: dict[str, str] = {}
-EXEMPT_FROM_AUTO_MODE: dict[str, str] = {}
+EXEMPT_FROM_FIREWALL_RUNNER: dict[str, str] = {
+    "package-xcode.yml:package": "macOS arm64 signing and --version/--help only; no agent session or model request",
+}
+EXEMPT_FROM_AUTO_MODE: dict[str, str] = {
+    "package-xcode.yml:package": "CLI startup smoke checks only, with an isolated home and no credentials",
+}
 
 
 def stop(message: str):
